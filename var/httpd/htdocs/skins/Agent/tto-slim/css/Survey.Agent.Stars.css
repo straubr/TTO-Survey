@@ -1,0 +1,118 @@
+/**
+ * @project     OTRS (http://www.otrs.org) - Agent Frontend
+ * @copyright   OTRS AG
+ * @license     AGPL (http://www.gnu.org/licenses/agpl.txt)
+ */
+
+/**
+ * @package     Skin "Default"
+ * @section     FAQDetails
+ */
+
+@media screen,projection,tv,handheld {
+
+
+/**
+ * @subsection  Article table body
+ */
+
+.RateButtons {
+    text-align: center;
+    display: inline-block;
+}
+
+.RateButtons > li {
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.RateButtons > li:first-child,
+.RateButtons > li:last-child {
+    font-weight: bold;
+}
+
+.RateButton {
+    position: relative;
+    text-align: center;
+    top: 10px;
+    display: block;
+    height: 30px;
+    width: 25px;
+    cursor: pointer;
+    float: left;
+    color: #000000;
+    text-align: center;
+}
+
+.RateButton i {
+    display: block;
+    font-size: 16px;
+    width: 100%;
+    text-align: center;
+    color: #999;
+}
+
+.RateButton i.fa-star {
+    display: none;
+}
+.RateButton i.fa-star{
+    color: #036;
+}
+.RateButton i.fa-star-half-o{
+    color: #036;
+}
+.RateButton i.fa-star-o{
+    color: gray;
+}
+
+.RateButton.RateChecked i.fa-star {
+    display: block;
+    color: #F3A515;
+}
+
+.RateButton.RateChecked i.fa-star-o {
+    display: none;
+}
+
+.RateButton:hover i.fa-star-o {
+    color: #07427C;
+}
+.RateButton:hover i.fa-star {
+    color: #07427C;
+}
+
+.RateStar {
+    display: block;
+    height: 16px;
+    float: left;
+    padding-left: 1px;
+    font-size: 10px;
+}
+
+.RateStarText {
+    text-indent:5px;
+}
+
+.RateLabelBefore,
+.RateLabelAfter {
+    color: #333;
+    padding-top: 5px;
+    font-weight: bold;
+}
+
+.RateLabelBefore {
+    float: left;
+    padding-right: 6px;
+}
+
+.RateLabelAfter {
+    float: left;
+    padding-left: 5px;
+}
+
+.ZoomSmallButton{
+    margin-left: 12px;
+}
+
+}
