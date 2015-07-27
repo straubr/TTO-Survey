@@ -18,8 +18,6 @@
         <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentSurveyZoom.tt"/>
         <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/PublicSurvey.tt"/>
         <File Permission="644" Location="var/httpd/htdocs/skins/Agent/tto-slim/css/Survey.Agent.Stars.css"/>
-        <File Permission="644" Location="doc/de/feature.md"/>
-        <File Permission="644" Location="doc/en/feature.md"/>
     </Filelist>
     <IntroInstall Type="pre" Title="Install Information" Lang="en"><![CDATA[
         <br/>
