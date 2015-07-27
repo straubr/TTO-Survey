@@ -280,42 +280,41 @@ $('.QuestionDelete').bind('click', function (Event) {
 # TTO Edit:
 [% RenderBlockStart("QuestionEditAddStars") %]
                 <form action="[% Env("CGIHandle") %]" method="post" enctype="multipart/form-data" name="AnswerAdd" id="AnswerAdd" class="Validate PreventMultipleSubmits">
-#		    Load rating css - steal from FAQ
-		    <link rel="stylesheet" type="text/css" href="/otrs-web/skins/Agent/tto-slim/css/Survey.Agent.Stars.css">
+                    <link rel="stylesheet" type="text/css" href="/otrs-web/skins/Agent/tto-slim/css/Survey.Agent.Stars.css">
                     <input type="hidden" name="Action" value="[% Env("Action") %]" />
                     <input type="hidden" name="Subaction" value="AnswerAdd" />
                     <input type="hidden" name="QuestionID" value="[% Data.QuestionID | html %]" />
                     <input type="hidden" name="SurveyID" value="[% Data.SurveyID | html %]" />
-		    <input type="hidden" id="Answer" name="Answer" value="empty"/>
+                    <input type="hidden" id="Answer" name="Answer" value="empty"/>
 
-		    <ul class="RateButtons">
-			<li><input type="text" id="Left" size="30" class="Validate_Required [% Data.AnswerServerError | html %] " /></li>
+                    <ul class="RateButtons">
+                        <li><input type="text" id="Left" size="30" class="Validate_Required [% Data.AnswerServerError | html %] " /></li>
 [% StarList = [
-    { id => '1', value = '0' },
-    { id => '2', value = '25' },
-    { id => '3', value = '50' },
-    { id => '4', value = '75' },
-    { id => '5', value = '100' },
-   ]
-%]
+                        { id => '1', value = '0' },
+                        { id => '2', value = '25' },
+                        { id => '3', value = '50' },
+                        { id => '4', value = '75' },
+                        { id => '5', value = '100' },
+                        ]
+                        %]
 [% FOREACH star IN StarList %]
-			<li id="RateButton[% star.value %]">
-			    <span class="RateButton RateUnChecked">
-				<i class="fa fa-star-o"></i>
-				<i class="fa fa-star"></i>
-				    [% star.id %]
-			    </span>
-			</li>
+                        <li id="RateButton[% star.value %]">
+                            <span class="RateButton RateUnChecked">
+                                <i class="fa fa-star-o"></i>
+                                <i class="fa fa-star"></i>
+                                [% star.id %]
+                            </span>
+                        </li>
 [% END %]
-			<li><input type="text" id="Right" size="30" class="Validate_Required [% Data.AnswerServerError | html %] "/></li>
+                        <li><input type="text" id="Right" size="30" class="Validate_Required [% Data.AnswerServerError | html %] "/></li>
                         <li><button class="CallForAction Plus" id="StarsSubmit" type="submit" value="[% Translate("Add") | html %]"><span><i class="fa fa-plus-square"></i> [% Translate("Add") | html %]</span></button></li>
-		    </ul>
-		    <br class="Clear" />
+                    </ul>
+                    <br class="Clear" />
                 </form>
 [% WRAPPER JSOnDocumentComplete %]
 <script type="text/javascript">//<![CDATA[
     $('#StarsSubmit').bind('click', function (Event) {
-	$('#Answer').val($('#Left').val() + "::" + $('#Right').val());
+        $('#Answer').val($('#Left').val() + "::" + $('#Right').val());
     });
     $('.RateButton').bind('click', function (Event) {
         var RateNumber = parseInt($(this).closest('li').attr('id').replace(/RateButton/, ''), 10);
@@ -469,7 +468,7 @@ $('.QuestionDelete').bind('click', function (Event) {
                                 </a>
                             </td>
 [% RenderBlockEnd("QuestionEditStarsDelete") %]
-			</tr>
+                        </tr>
 [% RenderBlockEnd("QuestionEditStars") %]
 
                     </tbody>
@@ -592,16 +591,16 @@ $('.AnswerDelete').bind('click', function (Event) {
                     <h2>[% Translate("Edit Answer") | html %]</h2>
                 </div>
                 <div class="Content">
-		    <ul class="RateButtons">
+                    <ul class="RateButtons">
                         <li><input type="text" id="Left" size="30" class="Validate_Required [% Data.AnswerServerError | html %] " value="[% Data.Left %]" /></li>
 [% StarList = [
-    { id => '1', value = '0' },
-    { id => '2', value = '25' },
-    { id => '3', value = '50' },
-    { id => '4', value = '75' },
-    { id => '5', value = '100' },
-   ]
-%]
+                        { id => '1', value = '0' },
+                        { id => '2', value = '25' },
+                        { id => '3', value = '50' },
+                        { id => '4', value = '75' },
+                        { id => '5', value = '100' },
+                        ]
+                        %]
 [% FOREACH star IN StarList %]
                         <li id="RateButton[% star.value %]">
                             <span class="RateButton RateUnChecked">
@@ -644,4 +643,3 @@ $('.AnswerDelete').bind('click', function (Event) {
 //]]></script>
 [% END %]
 [% RenderBlockEnd("AnswerEditStars") %]
-

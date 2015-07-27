@@ -94,30 +94,29 @@
 [% RenderBlockEnd("PublicAnswerTextarea") %]
 [% RenderBlockStart("PublicAnswerStars") %]
                 <div class="Question [% Data.Class | html %]"> [% Data.RequiredText | html %][% Data.Question %] </div>
-# Load CSS		
-		<link rel="stylesheet" type="text/css" href="/otrs-web/skins/Agent/tto-slim/css/Survey.Agent.Stars.css">
+# Load CSS
+                <link rel="stylesheet" type="text/css" href="/otrs-web/skins/Agent/tto-slim/css/Survey.Agent.Stars.css">
                 [% Data.ErrorText %]
-		<input type="hidden" id="StarsResult[% Data.QuestionID %]" name="PublicSurveyVote5[[% Data.QuestionID | html %]]">
-<ul class="RateButtons">
-                        <li><div class="Answer RateLabelBefore">[% Data.Left %]</div></li>
+                <input type="hidden" id="StarsResult[% Data.QuestionID %]" name="PublicSurveyVote5[[% Data.QuestionID | html %]]">
+                <ul class="RateButtons">
+                    <li><div class="Answer RateLabelBefore">[% Data.Left %]</div></li>
 [% StarList = [
-    { id => '1', value = '0' },
-    { id => '2', value = '25' },
-    { id => '3', value = '50' },
-    { id => '4', value = '75' },
-    { id => '5', value = '100' },
-   ]
-%]
+                    { id => '1', value = '0' },
+                    { id => '2', value = '25' },
+                    { id => '3', value = '50' },
+                    { id => '4', value = '75' },
+                    { id => '5', value = '100' },
+                    ]
+                    %]
 [% FOREACH star IN StarList %]
-                        <li id="RateButton[% star.value %]" question-id="[% Data.QuestionID %]">
-                            <span class="RateButton RateUnChecked">
-                                <i class="fa fa-star-o"></i>
-                                <i class="fa fa-star"></i>
-#				[% star.id %]
-                            </span>
-                        </li>
+                    <li id="RateButton[% star.value %]" question-id="[% Data.QuestionID %]">
+                        <span class="RateButton RateUnChecked">
+                            <i class="fa fa-star-o"></i>
+                            <i class="fa fa-star"></i>
+                        </span>
+                    </li>
 [% END %]
-                        <li><div class="RateLabelAfter">[% Data.Right %]</div></li>
+                    <li><div class="RateLabelAfter">[% Data.Right %]</div></li>
 
 [% WRAPPER JSOnDocumentComplete %]
 <script type="text/javascript">//<![CDATA[
@@ -135,87 +134,87 @@
                 $(this).removeClass('RateChecked');
             }
         });
-	$('#StarsResult' + $(this).closest('li').attr('question-id')).val(RateNumber);
+        $('#StarsResult' + $(this).closest('li').attr('question-id')).val(RateNumber);
     });
 //]]></script>
 [% END %]
 [% RenderBlockEnd("PublicAnswerStars") %]
-            </div>
+                </div>
 [% RenderBlockEnd("PublicQuestions") %]
-        </fieldset>
-        <div class="ActionRow" id="BottomActionRow">
-            <button class="Primary" type="submit" value="[% Translate("Finish") | html %]"> [% Translate("Finish") | html %] </button>
-        </div>
-    </form>
-</div>
+            </fieldset>
+            <div class="ActionRow" id="BottomActionRow">
+                <button class="Primary" type="submit" value="[% Translate("Finish") | html %]"> [% Translate("Finish") | html %] </button>
+            </div>
+        </form>
+    </div>
 [% RenderBlockEnd("PublicSurvey") %]
 
 [% RenderBlockStart("PublicSurveyMessage") %]
-<div id="MainBox" class="TicketCompose ARIARoleMain">
-    <div class="WidgetSimple">
-        <div class="Header">
-            <h2> [% Translate(Data.MessageType) | html %] </h2>
-        </div>
-        <div class="Content">
-            <h4> [% Translate(Data.MessageHeader) | html %] </h4>
-            <p class="SpacingTop">
+    <div id="MainBox" class="TicketCompose ARIARoleMain">
+        <div class="WidgetSimple">
+            <div class="Header">
+                <h2> [% Translate(Data.MessageType) | html %] </h2>
+            </div>
+            <div class="Content">
+                <h4> [% Translate(Data.MessageHeader) | html %] </h4>
+                <p class="SpacingTop">
                 [% Translate(Data.Message) | html %]
-            </p>
-            <div class="Clear"></div>
+                </p>
+                <div class="Clear"></div>
 [% RenderBlockStart("ShowAnswersButton") %]
-            <form action="[% Env("CGIHandle") %]" method="post">
-                <input type="hidden" name="Action" value="[% Env("Action") %]" />
-                <input type="hidden" name="Subaction" value="ShowVoteData" />
-                <input type="hidden" name="PublicSurveyKey" value="[% Data.PublicSurveyKey | html %]" />
-                <button type="submit" >[% Translate("Show my answers") | html %]</button>
-            </form>
+                <form action="[% Env("CGIHandle") %]" method="post">
+                    <input type="hidden" name="Action" value="[% Env("Action") %]" />
+                    <input type="hidden" name="Subaction" value="ShowVoteData" />
+                    <input type="hidden" name="PublicSurveyKey" value="[% Data.PublicSurveyKey | html %]" />
+                    <button type="submit" >[% Translate("Show my answers") | html %]</button>
+                </form>
 [% RenderBlockEnd("ShowAnswersButton") %]
+            </div>
         </div>
     </div>
-</div>
 [% RenderBlockEnd("PublicSurveyMessage") %]
 
 [% RenderBlockStart("PublicSurveyVoteData") %]
-<div class="Content ARIARoleMain" id="MainBox">
-    <div class="Header">
-        <h2>[% Translate("These are your answers") | html %]:</h2>
-    </div>
-    <div class="SurveyBlock">
-        <div class="SurveyBlockHeader">
+    <div class="Content ARIARoleMain" id="MainBox">
+        <div class="Header">
+            <h2>[% Translate("These are your answers") | html %]:</h2>
+        </div>
+        <div class="SurveyBlock">
+            <div class="SurveyBlockHeader">
             [% Translate("Survey Title") | html %]
+            </div>
+            <div class="Content">
+                <h2>[% Translate("Survey") | html %]: [% Data.Title | html %]</h2>
+            </div>
         </div>
-        <div class="Content">
-            <h2>[% Translate("Survey") | html %]: [% Data.Title | html %]</h2>
-        </div>
-    </div>
 
-    <div class="SurveyBlock">
-        <div class="SurveyBlockHeader">
+        <div class="SurveyBlock">
+            <div class="SurveyBlockHeader">
             [% Translate("Introduction") | html %]
-        </div>
-        <div class="Content">
+            </div>
+            <div class="Content">
             [% Data.Introduction %]
+            </div>
         </div>
-    </div>
 
-    <div class="Clear"></div>
-    <fieldset class="Survey">
-        <div class="SurveyBlockHeader">
+        <div class="Clear"></div>
+        <fieldset class="Survey">
+            <div class="SurveyBlockHeader">
             [% Translate("These are your answers") | html %]:
-        </div>
+            </div>
 
 [% RenderBlockStart("PublicSurveyVoteQuestion") %]
-        <div class="QuestionContainer">
-            <div class="Question [% Data.Class | html %]"> [% Data.RequiredText | html %][% Data.Question | html %]:</div>
+            <div class="QuestionContainer">
+                <div class="Question [% Data.Class | html %]"> [% Data.RequiredText | html %][% Data.Question | html %]:</div>
 [% RenderBlockStart("PublicSurveyVoteAnswer") %]
-            <div class="Answer">
+                <div class="Answer">
                 [% Data.Answer | html %]
-            </div>
-            <div class="Clear"></div>
+                </div>
+                <div class="Clear"></div>
 [% RenderBlockEnd("PublicSurveyVoteAnswer") %]
-            <div class="Clear"></div>
-        </div>
+                <div class="Clear"></div>
+            </div>
 [% RenderBlockEnd("PublicSurveyVoteQuestion") %]
-    </fieldset>
-</div>
+        </fieldset>
+    </div>
 [% RenderBlockEnd("PublicSurveyVoteData") %]

@@ -1,17 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<otrs_package version="1.0">
-    <Name>TTO Survey</Name>
+<otrs_package version="1.1">
+    <Name>TTO-Survey</Name>
+    <Version>1.0.0</Version>
     <Framework>4.0.x</Framework>
+    <PackageRequired Version="4.x">Survey</PackageRequired>
     <Vendor>TTO GmbH</Vendor>
     <URL>http://tto.de</URL>
-    <Version>1.0.3</Version>
-    <PackageRequired Version="4.x">Survey</PackageRequired>
-    <ChangeLog Version="1.0.0" Date="2015-07-27 10:30:00 UTC">Initial Release</ChangeLog>
-    <License>GNU GENERAL PUBLIC LICENSE Version 2, June 1991</License>
-    <BuildDate>?</BuildDate>
-    <BuildHost>?</BuildHost>
+    <License>GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007</License>
     <Description Lang="en">Added a new question type.</Description>
     <Description Lang="de">Enhält neuen Fragetyp für Umfragen</Description>
+    <ChangeLog Version="1.0.0" Date="2015-07-27 10:30:00 UTC">Initial Release</ChangeLog>
+    <Filelist>
+        <File Permission="644" Location="Custom/Kernel/Modules/AgentSurveyEditQuestions.pm"/>
+        <File Permission="644" Location="Custom/Kernel/Modules/AgentSurveyZoom.pm"/>
+        <File Permission="644" Location="Custom/Kernel/Modules/PublicSurvey.pm"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentSurveyEditQuestions.tt"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentSurveyZoom.tt"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/PublicSurvey.tt"/>
+        <File Permission="644" Location="var/httpd/htdocs/skins/Agent/tto-slim/css/Survey.Agent.Stars.css"/>
+        <File Permission="644" Location="doc/de/feature.md"/>
+        <File Permission="644" Location="doc/en/feature.md"/>
+    </Filelist>
     <IntroInstall Type="pre" Title="Install Information" Lang="en"><![CDATA[
         <br/>
         <strong> Welcome! </strong><br/>
@@ -24,13 +33,4 @@
         Enthält:
         - Neuen Fragetyp für Umfragen: Skala (Sterne)
         ]]></IntroInstall>
-    <Filelist>
-        <File Permission="644" Location="Custom/Kernel/Modules/AgentSurveyEditQuestions.pm"/>
-        <File Permission="644" Location="Custom/Kernel/Modules/AgentSurveyZoom.pm"/>
-        <File Permission="644" Location="Custom/Kernel/Modules/PublicSurvey.pm"/>
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentSurveyEditQuestions.tt"/>
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentSurveyZoom.tt"/>
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/PublicSurvey.tt"/>
-        <File Permission="644" Location="var/httpd/htdocs/skins/Agent/tto-slim/css/Survey.Agent.Stars.css"/>
-    </Filelist>
 </otrs_package>

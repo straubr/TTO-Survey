@@ -172,19 +172,19 @@
 [% RenderBlockEnd("SurveyEditStatsAnswer") %]
 [% RenderBlockStart("SurveyEditStatsStarsAnswer") %]
 # Load FAQ css
-		 <link rel="stylesheet" type="text/css" href="/otrs-web/skins/Agent/tto-slim/css/Survey.Agent.Stars.css">
+                        <link rel="stylesheet" type="text/css" href="/otrs-web/skins/Agent/tto-slim/css/Survey.Agent.Stars.css">
 
-		    <ul class="RateButtons" style="margin-left:25%;">
-                        <li><div class="Answer RateLabelBefore">[% Data.Left %]</div></li>
+                        <ul class="RateButtons" style="margin-left:25%;">
+                            <li><div class="Answer RateLabelBefore">[% Data.Left %]</div></li>
 [% RenderBlockStart("StarEntry") %]
-                        <li>
-                            <span class="RateButton [% Data.Checked %]">
-                                <i title="[% Data.Percentage | html %]%" class="[% Data.Class %]"></i>
-                            </span>
-                        </li>
+                            <li>
+                                <span class="RateButton [% Data.Checked %]">
+                                    <i title="[% Data.Percentage | html %]%" class="[% Data.Class %]"></i>
+                                </span>
+                            </li>
 [% RenderBlockEnd("StarEntry") %]
-                        <li><div class="Answer RateLabelAfter">[% Data.Right %]</div></li>
-		    </ul>
+                            <li><div class="Answer RateLabelAfter">[% Data.Right %]</div></li>
+                        </ul>
 [% RenderBlockEnd("SurveyEditStatsStarsAnswer") %]
                     </fieldset>
 [% RenderBlockEnd("SurveyEditStatsQuestion") %]
