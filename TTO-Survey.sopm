@@ -9,6 +9,7 @@
     <License>GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007</License>
     <Description Lang="en">Added a new question type.</Description>
     <Description Lang="de">Enhält neuen Fragetyp für Umfragen</Description>
+    <ChangeLog Version="1.0.0" Date="2015-07-27 10:01:08 UTC">Initial Release</ChangeLog>
     <ChangeLog Version="1.0.0" Date="2015-07-27 10:30:00 UTC">Initial Release</ChangeLog>
     <Filelist>
         <File Permission="644" Location="Custom/Kernel/Modules/AgentSurveyEditQuestions.pm"/>
