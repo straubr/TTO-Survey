@@ -1,18 +1,20 @@
 # --
-# Kernel/Modules/AgentSurveyEditQuestions.pm - a survey module
-# Copyright (C) 2001-2014 OTRS AG, http://otrs.com/
+# Copyright (C) 2001-2015 OTRS AG, http://otrs.com/
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (AGPL). If you
 # did not receive this file, see http://www.gnu.org/licenses/agpl.txt.
 # --
+# Last diff from beta 5.3
+# 2015.09.17 - RS -
+#           Migrated to 5.x
 
 package Kernel::Modules::AgentSurveyEditQuestions;
 
 use strict;
 use warnings;
 
-use Kernel::System::Survey;
+our $ObjectManagerDisabled = 1;
 
 sub new {
     my ( $Type, %Param ) = @_;
@@ -24,14 +26,6 @@ sub new {
     # get common objects
     %{$Self} = %Param;
 
-    # check needed objects
-    for my $Object (qw(ParamObject DBObject LayoutObject LogObject ConfigObject)) {
-        if ( !$Self->{$Object} ) {
-            $Self->{LayoutObject}->FatalError( Message => "Got no $Object!" );
-        }
-    }
-    $Self->{SurveyObject} = Kernel::System::Survey->new(%Param);
-
     return $Self;
 }
 
@@ -40,15 +34,50 @@ sub Run {
 
     my $Output;
 
+    # get needed objects
+    my $SurveyObject = $Kernel::OM->Get('Kernel::System::Survey');
+    my $ParamObject  = $Kernel::OM->Get('Kernel::System::Web::Request');
+    my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
+
+    # get params
+    my %GetParam;
+    for my $Key (qw(SurveyID QuestionID AnswerID)) {
+        $GetParam{$Key} = $ParamObject->GetParam( Param => $Key );
+    }
+
+    my $SurveyExists = 'no';
+    if ( $GetParam{SurveyID} ) {
+        $SurveyExists = $SurveyObject->ElementExists(
+            ElementID => $GetParam{SurveyID},
+            Element   => 'Survey'
+        );
+    }
+
+    my $QuestionExists = 'no';
+    if ( $GetParam{QuestionID} ) {
+        $QuestionExists = $SurveyObject->ElementExists(
+            ElementID => $GetParam{QuestionID},
+            Element   => 'Question'
+        );
+    }
+
+    my $AnswerExists = 'no';
+    if ( $GetParam{AnswerID} ) {
+        $AnswerExists = $SurveyObject->ElementExists(
+            ElementID => $GetParam{AnswerID},
+            Element   => 'Answer'
+        );
+    }
+
     # ------------------------------------------------------------ #
     # question add
     # ------------------------------------------------------------ #
     if ( $Self->{Subaction} eq 'QuestionAdd' ) {
-        my $SurveyID = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
-        my $Question = $Self->{ParamObject}->GetParam( Param => "Question" );
-        my $Type     = $Self->{ParamObject}->GetParam( Param => "Type" );
 
-        my $AnswerRequired = $Self->{ParamObject}->GetParam( Param => 'AnswerRequired' );
+        my $Question       = $ParamObject->GetParam( Param => "Question" );
+        my $Type           = $ParamObject->GetParam( Param => "Type" );
+        my $AnswerRequired = $ParamObject->GetParam( Param => 'AnswerRequired' );
+
         if ( $AnswerRequired && $AnswerRequired eq 'No' ) {
             $AnswerRequired = 0;
         }
@@ -57,16 +86,9 @@ sub Run {
         }
 
         # check if survey exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey!',
                 WithHeader => 'yes',
             );
@@ -74,21 +96,23 @@ sub Run {
 
         my %ServerError;
         if ($Question) {
-            $Self->{SurveyObject}->QuestionAdd(
-                SurveyID       => $SurveyID,
+            $SurveyObject->QuestionAdd(
+                SurveyID       => $GetParam{SurveyID},
                 Question       => $Question,
                 Type           => $Type,
                 AnswerRequired => $AnswerRequired,
                 UserID         => $Self->{UserID},
             );
-            $Self->{SurveyObject}->QuestionSort( SurveyID => $SurveyID );
+            $SurveyObject->QuestionSort(
+                SurveyID => $GetParam{SurveyID},
+            );
         }
         else {
             $ServerError{Question} = 1;
         }
 
         return $Self->_MaskQuestionOverview(
-            SurveyID    => $SurveyID,
+            SurveyID    => $GetParam{SurveyID},
             ServerError => \%ServerError,
         );
     }
@@ -97,36 +121,25 @@ sub Run {
     # question delete
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'QuestionDelete' ) {
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
 
         # check if survey and question exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey or question!',
                 WithHeader => 'yes',
             );
         }
-        $Self->{SurveyObject}->QuestionDelete(
-            SurveyID   => $SurveyID,
-            QuestionID => $QuestionID,
+        $SurveyObject->QuestionDelete(
+            SurveyID   => $GetParam{SurveyID},
+            QuestionID => $GetParam{QuestionID},
         );
-        $Self->{SurveyObject}->QuestionSort( SurveyID => $SurveyID );
+        $SurveyObject->QuestionSort(
+            SurveyID => $GetParam{SurveyID},
+        );
 
-        return $Self->{LayoutObject}->Redirect(
-            OP => "Action=$Self->{Action};Subaction=SurveyEdit;SurveyID=$SurveyID#Question"
+        return $LayoutObject->Redirect(
+            OP => "Action=$Self->{Action};Subaction=SurveyEdit;SurveyID=$GetParam{SurveyID}#Question",
         );
     }
 
@@ -134,36 +147,25 @@ sub Run {
     # question up
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'QuestionUp' ) {
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
 
         # check if survey and question exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey or question!',
                 WithHeader => 'yes',
             );
         }
-        $Self->{SurveyObject}->QuestionSort( SurveyID => $SurveyID );
-        $Self->{SurveyObject}->QuestionUp(
-            SurveyID   => $SurveyID,
-            QuestionID => $QuestionID,
+        $SurveyObject->QuestionSort(
+            SurveyID => $GetParam{SurveyID},
+        );
+        $SurveyObject->QuestionUp(
+            SurveyID   => $GetParam{SurveyID},
+            QuestionID => $GetParam{QuestionID},
         );
 
-        return $Self->{LayoutObject}->Redirect(
-            OP => "Action=$Self->{Action};Subaction=SurveyEdit;SurveyID=$SurveyID#Question"
+        return $LayoutObject->Redirect(
+            OP => "Action=$Self->{Action};Subaction=SurveyEdit;SurveyID=$GetParam{SurveyID}#Question",
         );
     }
 
@@ -171,36 +173,25 @@ sub Run {
     # question down
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'QuestionDown' ) {
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
 
         # check if survey and question exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey or question!',
                 WithHeader => 'yes',
             );
         }
-        $Self->{SurveyObject}->QuestionSort( SurveyID => $SurveyID );
-        $Self->{SurveyObject}->QuestionDown(
-            SurveyID   => $SurveyID,
-            QuestionID => $QuestionID,
+        $SurveyObject->QuestionSort(
+            SurveyID => $GetParam{SurveyID},
+        );
+        $SurveyObject->QuestionDown(
+            SurveyID   => $GetParam{SurveyID},
+            QuestionID => $GetParam{QuestionID},
         );
 
-        return $Self->{LayoutObject}->Redirect(
-            OP => "Action=$Self->{Action};Subaction=SurveyEdit;SurveyID=$SurveyID#Question"
+        return $LayoutObject->Redirect(
+            OP => "Action=$Self->{Action};Subaction=SurveyEdit;SurveyID=$GetParam{SurveyID}#Question",
         );
     }
 
@@ -208,31 +199,19 @@ sub Run {
     # question edit
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'QuestionEdit' ) {
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => 'SurveyID' );
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => 'QuestionID' );
 
         # check if survey and question exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            )
-        {
-            return $Self->{LayoutObject}->NoPermission(
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' ) {
+
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey or question!',
                 WithHeader => 'yes',
             );
         }
 
         return $Self->_MaskQuestionEdit(
-            SurveyID   => $SurveyID,
-            QuestionID => $QuestionID,
+            SurveyID   => $GetParam{SurveyID},
+            QuestionID => $GetParam{QuestionID},
         );
     }
 
@@ -240,11 +219,10 @@ sub Run {
     # question save
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'QuestionSave' ) {
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => 'QuestionID' );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => 'SurveyID' );
-        my $Question   = $Self->{ParamObject}->GetParam( Param => 'Question' );
 
-        my $AnswerRequired = $Self->{ParamObject}->GetParam( Param => 'AnswerRequired' );
+        my $Question       = $ParamObject->GetParam( Param => 'Question' );
+        my $AnswerRequired = $ParamObject->GetParam( Param => 'AnswerRequired' );
+
         if ( $AnswerRequired && $AnswerRequired eq 'No' ) {
             $AnswerRequired = 0;
         }
@@ -253,20 +231,9 @@ sub Run {
         }
 
         # check if survey and question exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey or question!',
                 WithHeader => 'yes',
             );
@@ -274,17 +241,17 @@ sub Run {
 
         my %ServerError;
         if ($Question) {
-            $Self->{SurveyObject}->QuestionUpdate(
-                QuestionID     => $QuestionID,
-                SurveyID       => $SurveyID,
+            $SurveyObject->QuestionUpdate(
+                QuestionID     => $GetParam{QuestionID},
+                SurveyID       => $GetParam{SurveyID},
                 Question       => $Question,
                 AnswerRequired => $AnswerRequired,
                 UserID         => $Self->{UserID},
             );
 
             return $Self->_MaskQuestionEdit(
-                SurveyID   => $SurveyID,
-                QuestionID => $QuestionID,
+                SurveyID   => $GetParam{SurveyID},
+                QuestionID => $GetParam{QuestionID},
             );
         }
         else {
@@ -292,8 +259,8 @@ sub Run {
         }
 
         return $Self->_MaskQuestionEdit(
-            SurveyID    => $SurveyID,
-            QuestionID  => $QuestionID,
+            SurveyID    => $GetParam{SurveyID},
+            QuestionID  => $GetParam{QuestionID},
             ServerError => \%ServerError,
         );
     }
@@ -302,25 +269,13 @@ sub Run {
     # answer add
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'AnswerAdd' ) {
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $Answer     = $Self->{ParamObject}->GetParam( Param => "Answer" );
+
+        my $Answer = $ParamObject->GetParam( Param => "Answer" );
 
         # check if survey and question exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey or question!',
                 WithHeader => 'yes',
             );
@@ -328,40 +283,35 @@ sub Run {
 
         my %ServerError;
         if ($Answer) {
-	    my %Question = $Self->{SurveyObject}->QuestionGet(
-		QuestionID => $QuestionID,
-	    );
-
-	    # TTO Customization:
-	    # If we have type stars, we need to add 5 answers automatically
-	    # 0 %, 25%, 50%, 75%, 100% - 
-	    # A answer from the customer only allows 1 vote per question thus we need 5 answers
-	    if ($Question{Type} eq 'Stars') {
-
-		my @Answer = split (/::/, $Answer);
-		my @Percentages = ( "$Answer[0]" . "::0", '25', '50', '75', "100::" . $Answer[1] );
-		foreach (@Percentages) {
-
-                    $Self->{SurveyObject}->AnswerAdd(
-                        SurveyID   => $SurveyID,
-                        QuestionID => $QuestionID,
+            # TTO Customization:
+            # If we have type stars, we need to add 5 answers automatically
+            # 0 %, 25%, 50%, 75%, 100% - 
+            # A answer from the customer only allows 1 vote per question thus we need 5 answers
+            my %Question = $SurveyObject->QuestionGet(
+                QuestionID => $GetParam{QuestionID},
+            );
+            if ($Question{Type} eq 'Stars') {
+                my @Answer = split (/::/, $Answer);
+                my @Percentages = ( "$Answer[0]" . "::0", '25', '50', '75', "100::" . $Answer[1] );
+                foreach (@Percentages) {
+                    $SurveyObject->AnswerAdd(
+                        SurveyID   => $GetParam{SurveyID},
+                        QuestionID => $GetParam{QuestionID},
                         Answer     => $_,
                         UserID     => $Self->{UserID},
-	            );
-		}
-
-	    } else {
-                $Self->{SurveyObject}->AnswerAdd(
-                    SurveyID   => $SurveyID,
-                    QuestionID => $QuestionID,
+                    );
+                }
+            } else {           
+                $SurveyObject->AnswerAdd(
+                    SurveyID   => $GetParam{SurveyID},
+                    QuestionID => $GetParam{QuestionID},
                     Answer     => $Answer,
                     UserID     => $Self->{UserID},
                 );
-	    }
-
+            }
             return $Self->_MaskQuestionEdit(
-                SurveyID   => $SurveyID,
-                QuestionID => $QuestionID,
+                SurveyID   => $GetParam{SurveyID},
+                QuestionID => $GetParam{QuestionID},
             );
         }
         else {
@@ -369,8 +319,8 @@ sub Run {
         }
 
         return $Self->_MaskQuestionEdit(
-            SurveyID    => $SurveyID,
-            QuestionID  => $QuestionID,
+            SurveyID    => $GetParam{SurveyID},
+            QuestionID  => $GetParam{QuestionID},
             ServerError => \%ServerError,
         );
     }
@@ -379,57 +329,43 @@ sub Run {
     # answer delete
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'AnswerDelete' ) {
-        my $AnswerID   = $Self->{ParamObject}->GetParam( Param => "AnswerID" );
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
 
         # check if survey, question and answer exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $AnswerID,
-                Element   => 'Answer'
-            )
-            ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' || $AnswerExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey, question or answer!',
                 WithHeader => 'yes',
             );
         }
-	# TTO Customization:
- 	# If one entry is deleted from stars, need to delete all:
-        my %Question = $Self->{SurveyObject}->QuestionGet( QuestionID => $QuestionID );
-	if ($Question{Type} eq 'Stars') {
-            my @List = $Self->{SurveyObject}->AnswerList( QuestionID => $QuestionID );
-	    foreach (@List) {
+        # TTO Customization:
+        # If one entry is deleted from stars, need to delete all:
+        my %Question = $SurveyObject->QuestionGet(
+            QuestionID => $GetParam{QuestionID},
+        );
+        if ($Question{Type} eq 'Stars') {
+            my @List = $SurveyObject->AnswerList(
+                QuestionID => $GetParam{QuestionID},
+            );
+            foreach (@List) {
                 $Self->{SurveyObject}->AnswerDelete(
-                    QuestionID => $QuestionID,
+                    QuestionID => $GetParam{QuestionID},
                     AnswerID   => $_->{AnswerID},
                 );
-	    }
-		
-	} else {
-            $Self->{SurveyObject}->AnswerDelete(
-                QuestionID => $QuestionID,
-                AnswerID   => $AnswerID,
+            }
+        } else {
+            $SurveyObject->AnswerDelete(
+                QuestionID => $GetParam{QuestionID},
+                AnswerID   => $GetParam{AnswerID},
             );
-	}
-        $Self->{SurveyObject}->AnswerSort( QuestionID => $QuestionID );
+        }
+        $SurveyObject->AnswerSort(
+            QuestionID => $GetParam{QuestionID},
+        );
 
-        return $Self->{LayoutObject}->Redirect(
+        return $LayoutObject->Redirect(
             OP =>
-                "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$SurveyID;QuestionID=$QuestionID#Answer",
+                "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$GetParam{SurveyID};QuestionID=$GetParam{QuestionID}#Answer",
         );
     }
 
@@ -437,43 +373,26 @@ sub Run {
     # answer up
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'AnswerUp' ) {
-        my $AnswerID   = $Self->{ParamObject}->GetParam( Param => "AnswerID" );
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
 
         # check if survey, question and answer exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $AnswerID,
-                Element   => 'Answer'
-            )
-            ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' || $AnswerExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey, question or answer!',
                 WithHeader => 'yes',
             );
         }
-        $Self->{SurveyObject}->AnswerSort( QuestionID => $QuestionID );
-        $Self->{SurveyObject}->AnswerUp(
-            QuestionID => $QuestionID,
-            AnswerID   => $AnswerID,
+        $SurveyObject->AnswerSort(
+            QuestionID => $GetParam{QuestionID},
+        );
+        $SurveyObject->AnswerUp(
+            QuestionID => $GetParam{QuestionID},
+            AnswerID   => $GetParam{AnswerID},
         );
 
-        return $Self->{LayoutObject}->Redirect(
+        return $LayoutObject->Redirect(
             OP =>
-                "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$SurveyID;QuestionID=$QuestionID#Answer",
+                "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$GetParam{SurveyID};QuestionID=$GetParam{QuestionID}#Answer",
         );
     }
 
@@ -481,43 +400,26 @@ sub Run {
     # answer down
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'AnswerDown' ) {
-        my $AnswerID   = $Self->{ParamObject}->GetParam( Param => "AnswerID" );
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
 
         # check if survey, question and answer exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $AnswerID,
-                Element   => 'Answer'
-            )
-            ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' || $AnswerExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey, question or answer!',
                 WithHeader => 'yes',
             );
         }
-        $Self->{SurveyObject}->AnswerSort( QuestionID => $QuestionID );
-        $Self->{SurveyObject}->AnswerDown(
-            QuestionID => $QuestionID,
-            AnswerID   => $AnswerID,
+        $SurveyObject->AnswerSort(
+            QuestionID => $GetParam{QuestionID},
+        );
+        $SurveyObject->AnswerDown(
+            QuestionID => $GetParam{QuestionID},
+            AnswerID   => $GetParam{AnswerID},
         );
 
-        return $Self->{LayoutObject}->Redirect(
+        return $LayoutObject->Redirect(
             OP =>
-                "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$SurveyID;QuestionID=$QuestionID#Answer",
+                "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$GetParam{SurveyID};QuestionID=$GetParam{QuestionID}#Answer",
         );
     }
 
@@ -525,39 +427,20 @@ sub Run {
     # answer edit
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'AnswerEdit' ) {
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => 'SurveyID' );
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => 'QuestionID' );
-        my $AnswerID   = $Self->{ParamObject}->GetParam( Param => 'AnswerID' );
 
         # check if survey, question and answer exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $AnswerID,
-                Element   => 'Answer'
-            )
-            ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' || $AnswerExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey, question or answer!',
                 WithHeader => 'yes',
             );
         }
 
         return $Self->_MaskAnswerEdit(
-            SurveyID   => $SurveyID,
-            QuestionID => $QuestionID,
-            AnswerID   => $AnswerID,
+            SurveyID   => $GetParam{SurveyID},
+            QuestionID => $GetParam{QuestionID},
+            AnswerID   => $GetParam{AnswerID},
         );
     }
 
@@ -565,31 +448,13 @@ sub Run {
     # answer save
     # ------------------------------------------------------------ #
     elsif ( $Self->{Subaction} eq 'AnswerSave' ) {
-        my $AnswerID   = $Self->{ParamObject}->GetParam( Param => "AnswerID" );
-        my $QuestionID = $Self->{ParamObject}->GetParam( Param => "QuestionID" );
-        my $SurveyID   = $Self->{ParamObject}->GetParam( Param => "SurveyID" );
-        my $Answer     = $Self->{ParamObject}->GetParam( Param => "Answer" );
+
+        my $Answer = $ParamObject->GetParam( Param => "Answer" );
 
         # check if survey, question and answer exists
-        if (
-            $Self->{SurveyObject}->ElementExists(
-                ElementID => $SurveyID,
-                Element   => 'Survey'
-            ) ne
-            'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $QuestionID,
-                Element   => 'Question'
-            ) ne 'Yes'
-            || $Self->{SurveyObject}->ElementExists(
-                ElementID => $AnswerID,
-                Element   => 'Answer'
-            )
-            ne 'Yes'
-            )
-        {
+        if ( $SurveyExists ne 'Yes' || $QuestionExists ne 'Yes' || $AnswerExists ne 'Yes' ) {
 
-            return $Self->{LayoutObject}->NoPermission(
+            return $LayoutObject->NoPermission(
                 Message    => 'You have no permission for this survey, question or answer!',
                 WithHeader => 'yes',
             );
@@ -597,49 +462,51 @@ sub Run {
 
         my %ServerError;
         if ($Answer) {
-	    # TTO Customization
-	    # Special case for stars (might need to update two answerIDs)
-	    my %Question = $Self->{SurveyObject}->QuestionGet(
-                QuestionID => $QuestionID,
-    	    );
-	    if ($Question{Type} eq 'Stars') {
-	        my @List = $Self->{SurveyObject}->AnswerList( QuestionID => $QuestionID );
-	        my @First = split(/::/, $Answer);
-	        my @Last = split(/::/, $Answer);
-                $Self->{SurveyObject}->AnswerUpdate(
+            # TTO Customization
+            # Special case for stars (might need to update two answerIDs)
+            my %Question = $SurveyObject->QuestionGet(
+                QuestionID => $GetParam{QuestionID},
+            );
+            if ($Question{Type} eq 'Stars') {
+                my @List = $SurveyObject->AnswerList(
+                    QuestionID => $GetParam{QuestionID},
+                );
+                my @First = split(/::/, $Answer);
+                my @Last = split(/::/, $Answer);
+                $SurveyObject->AnswerUpdate(
                     AnswerID   => $List[0]->{AnswerID},
-                    QuestionID => $QuestionID,
+                    QuestionID => $GetParam{QuestionID},
                     Answer     => $First[0] . '::0',
                     UserID     => $Self->{UserID},
                 );
-                $Self->{SurveyObject}->AnswerUpdate(
+                $SurveyObject->AnswerUpdate(
                     AnswerID   => $List[4]->{AnswerID},
-                    QuestionID => $QuestionID,
+                    QuestionID => $GetParam{QuestionID},
                     Answer     => '100::' . $Last[1],
                     UserID     => $Self->{UserID},
                 );
-	    } else {
-                $Self->{SurveyObject}->AnswerUpdate(
-                    AnswerID   => $AnswerID,
-                    QuestionID => $QuestionID,
+            } else {            
+                $SurveyObject->AnswerUpdate(
+                    AnswerID   => $GetParam{AnswerID},
+                    QuestionID => $GetParam{QuestionID},
                     Answer     => $Answer,
                     UserID     => $Self->{UserID},
                 );
-	    }
+            }
 
-            return $Self->{LayoutObject}->Redirect(
+            return $LayoutObject->Redirect(
                 OP =>
-                    "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$SurveyID;QuestionID=$QuestionID#Answer"
+                    "Action=$Self->{Action};Subaction=QuestionEdit;SurveyID=$GetParam{SurveyID};QuestionID=$GetParam{QuestionID}#Answer"
             );
         }
         else {
-            $ServerError{AnswerServerError} = 'ServerError';
+            $ServerError{AnswerServerError} = 'SeverError';
         }
 
         return $Self->_MaskAnswerEdit(
-            SurveyID    => $SurveyID,
-            QuestionID  => $QuestionID,
-            AnswerID    => $AnswerID,
+            SurveyID    => $GetParam{SurveyID},
+            QuestionID  => $GetParam{QuestionID},
+            AnswerID    => $GetParam{AnswerID},
             ServerError => \%ServerError,
         );
     }
@@ -647,33 +514,27 @@ sub Run {
     # ------------------------------------------------------------ #
     # question overview
     # ------------------------------------------------------------ #
-    my $SurveyID = $Self->{ParamObject}->GetParam( Param => 'SurveyID' );
+    if ( !$GetParam{SurveyID} ) {
 
-    if ( !$SurveyID ) {
 
-        return $Self->{LayoutObject}->ErrorScreen(
+        return $LayoutObject->ErrorScreen(
             Message => 'No SurveyID is given!',
             Comment => 'Please contact the admin.',
         );
     }
 
     # check if survey exists
-    if (
-        $Self->{SurveyObject}->ElementExists(
-            ElementID => $SurveyID,
-            Element   => 'Survey'
-        ) ne
-        'Yes'
-        )
-    {
+    if ( $SurveyExists ne 'Yes' ) {
 
-        return $Self->{LayoutObject}->NoPermission(
+        return $LayoutObject->NoPermission(
             Message    => 'You have no permission for this survey!',
             WithHeader => 'yes',
         );
     }
 
-    return $Self->_MaskQuestionOverview( SurveyID => $SurveyID );
+    return $Self->_MaskQuestionOverview(
+        SurveyID => $GetParam{SurveyID},
+    );
 }
 
 sub _MaskQuestionOverview {
@@ -686,34 +547,44 @@ sub _MaskQuestionOverview {
 
     my $Output;
 
+    # get layout object
+    my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
+
     if ( !$Param{SurveyID} ) {
 
-        return $Self->{LayoutObject}->ErrorScreen(
+        return $LayoutObject->ErrorScreen(
             Message => 'No SurveyID is given!',
             Comment => 'Please contact the admin.',
         );
     }
 
     # output header
-    $Output = $Self->{LayoutObject}->Header(
+    $Output = $LayoutObject->Header(
         Title     => 'Survey Edit Questions',
         Type      => 'Small',
         BodyClass => 'Popup',
     );
 
-    # get all attributes of the survey
-    my %Survey = $Self->{SurveyObject}->SurveyGet( SurveyID => $Param{SurveyID} );
+    # get survey object
+    my $SurveyObject = $Kernel::OM->Get('Kernel::System::Survey');
 
-    $Self->{LayoutObject}->Block(
+    # get all attributes of the survey
+    my %Survey = $SurveyObject->SurveyGet(
+        SurveyID => $Param{SurveyID},
+    );
+
+    $LayoutObject->Block(
         Name => 'SurveyEditQuestions',
         Data => \%Survey,
     );
 
-    my @List = $Self->{SurveyObject}->QuestionList( SurveyID => $Param{SurveyID} );
+    my @List = $SurveyObject->QuestionList(
+        SurveyID => $Param{SurveyID},
+    );
 
     if ( $Survey{Status} && $Survey{Status} eq 'New' ) {
 
-	# TTO: Added new Option
+        # TTO Customization: Added new Option (Stars)
         my $ArrayHashRef = [
             {
                 Key      => 'YesNo',
@@ -738,13 +609,14 @@ sub _MaskQuestionOverview {
             },
         ];
 
-        my $SelectionType = $Self->{LayoutObject}->BuildSelection(
+        my $SelectionType = $LayoutObject->BuildSelection(
             Data          => $ArrayHashRef,
             Name          => 'Type',
             ID            => 'Type',
             SelectedValue => 'Yes/No',
             Translation   => 1,
-            Title         => $Self->{LayoutObject}->{LanguageObject}->Translate('Question Type'),
+            Title         => $LayoutObject->{LanguageObject}->Translate('Question Type'),
+            Class         => 'Modernize',
         );
 
         $ArrayHashRef = [
@@ -759,12 +631,13 @@ sub _MaskQuestionOverview {
             }
         ];
 
-        my $AnswerRequiredSelect = $Self->{LayoutObject}->BuildSelection(
+        my $AnswerRequiredSelect = $LayoutObject->BuildSelection(
             Data          => $ArrayHashRef,
             Name          => 'AnswerRequired',
             ID            => 'AnswerRequired',
             SelectedValue => 'Yes',
             Translation   => 1,
+            Class         => 'Modernize',
         );
 
         my $QuestionErrorClass = '';
@@ -772,7 +645,7 @@ sub _MaskQuestionOverview {
             $QuestionErrorClass = 'ServerError';
         }
 
-        $Self->{LayoutObject}->Block(
+        $LayoutObject->Block(
             Name => 'SurveyAddQuestion',
             Data => {
                 SurveyID             => $Param{SurveyID},
@@ -783,16 +656,16 @@ sub _MaskQuestionOverview {
         );
 
         if ( scalar @List ) {
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'SurveyQuestionsTable',
                 Data => {},
             );
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'SurveyStatusColumn',
                 Data => {},
             );
 
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'SurveyDeleteColumn',
                 Data => {},
             );
@@ -800,7 +673,7 @@ sub _MaskQuestionOverview {
             my $Counter = 0;
 
             for my $Question (@List) {
-                my $AnswerCount = $Self->{SurveyObject}->AnswerCount(
+                my $AnswerCount = $SurveyObject->AnswerCount(
                     QuestionID => $Question->{QuestionID},
                 );
 
@@ -823,6 +696,7 @@ sub _MaskQuestionOverview {
                         $Status = 'Incomplete';
                     }
                 }
+                # TTO Customization:
                 if ( $Question->{Type} eq 'Stars' ) {
                     if ( $AnswerCount < 1 ) {
                         $Class  = 'Warning';
@@ -831,7 +705,7 @@ sub _MaskQuestionOverview {
                 }
                 my $AnswerRequired = $Question->{AnswerRequired} ? 'Yes' : 'No';
 
-                $Self->{LayoutObject}->Block(
+                $LayoutObject->Block(
                     Name => 'SurveyQuestionsRow',
                     Data => {
                         %{$Question},
@@ -842,7 +716,7 @@ sub _MaskQuestionOverview {
                         ClassDown      => $ClassDown,
                     },
                 );
-                $Self->{LayoutObject}->Block(
+                $LayoutObject->Block(
                     Name => 'SurveyQuestionsDeleteButton',
                     Data => $Question,
                 );
@@ -850,17 +724,17 @@ sub _MaskQuestionOverview {
             }
         }
         else {
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'SurveyNoQuestionsSaved',
                 Data => {
                     Columns => 5,
-                    }
+                },
             );
         }
 
     }
     else {
-        $Self->{LayoutObject}->Block(
+        $LayoutObject->Block(
             Name => 'SurveyQuestionsTable',
             Data => {},
         );
@@ -880,7 +754,7 @@ sub _MaskQuestionOverview {
 
             my $AnswerRequired = $Question->{AnswerRequired} ? 'Yes' : 'No';
 
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'SurveyQuestionsSaved',
                 Data => {
                     %{$Question},
@@ -894,12 +768,14 @@ sub _MaskQuestionOverview {
         }
     }
 
-    $Output .= $Self->{LayoutObject}->Output(
+    $Output .= $LayoutObject->Output(
         TemplateFile => 'AgentSurveyEditQuestions',
-        Data         => { SurveyID => $Param{SurveyID} },
+        Data         => {
+            SurveyID => $Param{SurveyID},
+        },
     );
 
-    $Output .= $Self->{LayoutObject}->Footer( Type => 'Small' );
+    $Output .= $LayoutObject->Footer( Type => 'Small' );
 
     return $Output;
 }
@@ -914,14 +790,25 @@ sub _MaskQuestionEdit {
 
     my $Output;
 
+    # get layout object
+    my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
+
     # output header
-    $Output = $Self->{LayoutObject}->Header(
+    $Output = $LayoutObject->Header(
         Title     => 'Question Edit',
         Type      => 'Small',
         BodyClass => 'Popup',
     );
-    my %Survey = $Self->{SurveyObject}->SurveyGet( SurveyID => $Param{SurveyID} );
-    my %Question = $Self->{SurveyObject}->QuestionGet( QuestionID => $Param{QuestionID} );
+
+    # get survey object
+    my $SurveyObject = $Kernel::OM->Get('Kernel::System::Survey');
+
+    my %Survey = $SurveyObject->SurveyGet(
+        SurveyID => $Param{SurveyID},
+    );
+    my %Question = $SurveyObject->QuestionGet(
+        QuestionID => $Param{QuestionID},
+    );
 
     my $ArrayHashRef = [
         {
@@ -941,16 +828,17 @@ sub _MaskQuestionEdit {
         $ArrayHashRef->[1]{Selected} = 1;
     }
 
-    my $AnswerRequiredSelect = $Self->{LayoutObject}->BuildSelection(
+    my $AnswerRequiredSelect = $LayoutObject->BuildSelection(
         Data          => $ArrayHashRef,
         Name          => 'AnswerRequired',
         ID            => 'AnswerRequired',
         SelectedValue => 'Yes',
         Translation   => 1,
+        Class         => 'Modernize',
     );
 
     # print the main body
-    $Self->{LayoutObject}->Block(
+    $LayoutObject->Block(
         Name => 'QuestionEdit',
         Data => {
             AnswerRequiredSelect => $AnswerRequiredSelect,
@@ -960,19 +848,33 @@ sub _MaskQuestionEdit {
     );
 
     if ( $Question{Type} eq 'YesNo' ) {
-        $Self->{LayoutObject}->Block( Name => 'QuestionEditTable' );
-        $Self->{LayoutObject}->Block( Name => 'QuestionEditYesno' );
+        $LayoutObject->Block(
+            Name => 'QuestionEditTable',
+            Data => {},
+        );
+        $LayoutObject->Block(
+            Name => 'QuestionEditYesno',
+            Data => {},
+        );
     }
     elsif ( $Question{Type} eq 'Radio' || $Question{Type} eq 'Checkbox' ) {
 
         my $Type = $Question{Type};
-        my @List = $Self->{SurveyObject}->AnswerList( QuestionID => $Param{QuestionID} );
+        my @List = $SurveyObject->AnswerList(
+            QuestionID => $Param{QuestionID},
+        );
         if ( scalar @List ) {
 
-            $Self->{LayoutObject}->Block( Name => 'QuestionEditTable' );
+            $LayoutObject->Block(
+                Name => 'QuestionEditTable',
+                Data => {},
+            );
             if ( $Survey{Status} eq 'New' ) {
 
-                $Self->{LayoutObject}->Block( Name => 'QuestionEditTableDelete' );
+                $LayoutObject->Block(
+                    Name => 'QuestionEditTableDelete',
+                    Data => {},
+                );
 
                 my $Counter = 0;
                 for my $Answer2 (@List) {
@@ -991,7 +893,7 @@ sub _MaskQuestionEdit {
                         $ClassDown = 'Disabled';
                     }
 
-                    $Self->{LayoutObject}->Block(
+                    $LayoutObject->Block(
                         Name => "QuestionEdit" . $Type,
                         Data => {
                             %{$Answer2},
@@ -999,14 +901,14 @@ sub _MaskQuestionEdit {
                             ClassDown => $ClassDown,
                         },
                     );
-                    $Self->{LayoutObject}->Block(
+                    $LayoutObject->Block(
                         Name => 'QuestionEdit' . $Type . 'Delete',
                         Data => $Answer2,
                     );
                     $Counter++;
                 }
 
-                $Self->{LayoutObject}->Block(
+                $LayoutObject->Block(
                     Name => 'QuestionEditAddAnswer',
                     Data => {
                         %Question,
@@ -1030,7 +932,7 @@ sub _MaskQuestionEdit {
                         $ClassDown = 'Disabled';
                     }
 
-                    $Self->{LayoutObject}->Block(
+                    $LayoutObject->Block(
                         Name => "QuestionEdit" . $Type,
                         Data => {
                             %{$Answer2},
@@ -1043,33 +945,40 @@ sub _MaskQuestionEdit {
             }
         }
         else {
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'NoAnswersSaved',
                 Data => {
                     Columns => 3,
                 },
             );
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'QuestionEditAddAnswer',
                 Data => {%Question},
             );
         }
     }
     elsif ( $Question{Type} eq 'Textarea' ) {
-        $Self->{LayoutObject}->Block( Name => 'QuestionEditTextArea' );
+        $LayoutObject->Block(
+            Name => 'QuestionEditTextArea',
+            Data => {},
+        );
     }
     # TTO customization:
     elsif ( $Question{Type} eq 'Stars' ){
         my $Type = $Question{Type};
-        my @List = $Self->{SurveyObject}->AnswerList( QuestionID => $Param{QuestionID} );
-
-
+        my @List = $SurveyObject->AnswerList(
+            QuestionID => $Param{QuestionID},
+        );
         if ( scalar @List ) {
-
-            $Self->{LayoutObject}->Block( Name => 'QuestionEditTable' );
+            $LayoutObject->Block(
+                Name => 'QuestionEditTable'
+                Data => {},
+            );
             if ( $Survey{Status} eq 'New' ) {
-
-                $Self->{LayoutObject}->Block( Name => 'QuestionEditTableDelete' );
+                $Self->{LayoutObject}->Block(
+                    Name => 'QuestionEditTableDelete',
+                    Data => {},
+                );
                 my $Counter = 0;
                 for my $Answer2 (@List) {
                     $Answer2->{SurveyID} = $Param{SurveyID};
@@ -1087,7 +996,7 @@ sub _MaskQuestionEdit {
                         $ClassDown = 'Disabled';
                     }
 
-                    $Self->{LayoutObject}->Block(
+                    $LayoutObject->Block(
                         Name => "QuestionEdit" . $Type,
                         Data => {
                             %{$Answer2},
@@ -1095,20 +1004,12 @@ sub _MaskQuestionEdit {
                             ClassDown => $ClassDown,
                         },
                     );
-                    $Self->{LayoutObject}->Block(
+                    $LayoutObject->Block(
                         Name => 'QuestionEdit' . $Type . 'Delete',
                         Data => $Answer2,
                     );
                     $Counter++;
                 }
-
-#                $Self->{LayoutObject}->Block(
-#                    Name => 'QuestionEditAddStars',
-#                    Data => {
-#                        %Question,
-#                        %ServerError,
-#                    },
-#                );
             }
             else {
                 my $Counter;
@@ -1126,7 +1027,7 @@ sub _MaskQuestionEdit {
                         $ClassDown = 'Disabled';
                     }
 
-                    $Self->{LayoutObject}->Block(
+                    $LayoutObject->Block(
                         Name => "QuestionEdit" . $Type,
                         Data => {
                             %{$Answer2},
@@ -1139,25 +1040,27 @@ sub _MaskQuestionEdit {
             }
         }
         else {
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'NoAnswersSaved',
                 Data => {
                     Columns => 3,
                 },
             );
-            $Self->{LayoutObject}->Block(
+            $LayoutObject->Block(
                 Name => 'QuestionEditAddStars',
                 Data => {%Question},
             );
         }
     }
-# ------------------------ End of Stars Block -----------------------------
-
-    $Output .= $Self->{LayoutObject}->Output(
+# ------------------------ End of Stars Block -----------------------------    
+    
+    $Output .= $LayoutObject->Output(
         TemplateFile => 'AgentSurveyEditQuestions',
         Data         => {%Param},
     );
-    $Output .= $Self->{LayoutObject}->Footer( Type => 'Small' );
+    $Output .= $LayoutObject->Footer(
+        Type => 'Small',
+    );
 
     return $Output;
 }
@@ -1170,32 +1073,33 @@ sub _MaskAnswerEdit {
         %ServerError = %{ $Param{ServerError} };
     }
 
+    # get layout object
+    my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
+
     my $Output;
-    $Output = $Self->{LayoutObject}->Header(
+    $Output = $LayoutObject->Header(
         Title     => 'Answer Edit',
         Type      => 'Small',
         BodyClass => 'Popup',
     );
-    my %Answer = $Self->{SurveyObject}->AnswerGet( AnswerID => $Param{AnswerID} );
+
+    # get survey object
+    my $SurveyObject = $Kernel::OM->Get('Kernel::System::Survey');
+
+    my %Answer = $SurveyObject->AnswerGet(
+        AnswerID => $Param{AnswerID},
+    );
     $Answer{SurveyID} = $Param{SurveyID};
 
-    # TTO Customization:
-    # Added Type of Question
-    # Appended type to block
-    my %Question = $Self->{SurveyObject}->QuestionGet(
-	QuestionID => $Self->{ParamObject}->GetParam( Param => 'QuestionID' ),
+    my %Question = $SurveyObject->QuestionGet(
+        QuestionID => $Param{QuestionID},
     );
-    my $Type = "";
-    if ($Question{Type} eq 'Stars') {
-	$Type = "Stars";
-        my @List = $Self->{SurveyObject}->AnswerList( QuestionID => $Param{QuestionID} );
-	my @First = split(/::/, $List[0]->{Answer});
-	my @Last = split(/::/, $List[4]->{Answer});
-	$Answer{Left} = $First[0];
-	$Answer{Right} = $Last[1];
-    }
-    $Self->{LayoutObject}->Block(
-        Name => 'AnswerEdit' . $Type,
+    $Param{Question} = $Question{Question};
+    # TODO old version did have some stuff here - check please
+
+    # print the main table.
+    $LayoutObject->Block(
+        Name => 'AnswerEdit',
         Data => {
             %Answer,
             %Param,
@@ -1203,12 +1107,16 @@ sub _MaskAnswerEdit {
         },
     );
 
-    $Output .= $Self->{LayoutObject}->Output(
+    $Output .= $LayoutObject->Output(
         TemplateFile => 'AgentSurveyEditQuestions',
-        Data         => {%Param},
+        Data         => {
+            %Param,
+        },
     );
 
-    $Output .= $Self->{LayoutObject}->Footer( Type => 'Small' );
+    $Output .= $LayoutObject->Footer(
+        Type => 'Small',
+    );
 
     return $Output;
 }

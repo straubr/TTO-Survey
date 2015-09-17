@@ -2,7 +2,7 @@
 <otrs_package version="1.1">
     <Name>TTO-Survey</Name>
     <Version>1.0.2</Version>
-    <Framework>4.0.x</Framework>
+    <Framework>5.x</Framework>
     <PackageRequired Version="4.x">Survey</PackageRequired>
     <Vendor>TTO GmbH</Vendor>
     <URL>http://tto.de</URL>
@@ -18,9 +18,9 @@
         <File Permission="644" Location="Custom/Kernel/Modules/AgentSurveyZoom.pm"/>
         <File Permission="644" Location="Custom/Kernel/Modules/PublicSurvey.pm"/>
         <File Permission="644" Location="Custom/Kernel/Modules/AgentSurveyStats.pm"/>
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentSurveyEditQuestions.tt"/>
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentSurveyZoom.tt"/>
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/PublicSurvey.tt"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Templates/Standard/AgentSurveyEditQuestions.tt"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Templates/Standard/AgentSurveyZoom.tt"/>
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Templates/Standard/PublicSurvey.tt"/>
         <File Permission="644" Location="var/httpd/htdocs/skins/Agent/tto-slim/css/Survey.Agent.Stars.css"/>
     </Filelist>
     <IntroInstall Type="pre" Title="Install Information" Lang="en"><![CDATA[

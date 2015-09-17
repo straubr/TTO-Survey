@@ -6,6 +6,9 @@
 # the enclosed file COPYING for license information (AGPL). If you
 # did not receive this file, see http://www.gnu.org/licenses/agpl.txt.
 # --
+# Last diff from beta 5.3
+# 2015.09.17 - RS -
+#           Migrated to 5.x
 
 [% RenderBlockStart("PublicSurvey") %]
 <div class="Content ARIARoleMain" id="MainBox">
@@ -92,6 +95,7 @@
                     <textarea title="[% Data.Question %]" id="RichText[% Data.QuestionID | html %]" name="PublicSurveyVote4[[% Data.QuestionID | html %]]" class="RichText DontPrint" rows="15" cols="[% Config("Ticket::Frontend::TextAreaNote") %]">[% Data.Value %]</textarea>
                 </div>
 [% RenderBlockEnd("PublicAnswerTextarea") %]
+# TTO Customization
 [% RenderBlockStart("PublicAnswerStars") %]
                 <div class="Question [% Data.Class | html %]"> [% Data.RequiredText | html %][% Data.Question %] </div>
 # Load CSS
@@ -139,82 +143,82 @@
 //]]></script>
 [% END %]
 [% RenderBlockEnd("PublicAnswerStars") %]
-                </div>
-[% RenderBlockEnd("PublicQuestions") %]
-            </fieldset>
-            <div class="ActionRow" id="BottomActionRow">
-                <button class="Primary" type="submit" value="[% Translate("Finish") | html %]"> [% Translate("Finish") | html %] </button>
             </div>
-        </form>
-    </div>
+[% RenderBlockEnd("PublicQuestions") %]
+        </fieldset>
+        <div class="ActionRow" id="BottomActionRow">
+            <button class="Primary" type="submit" value="[% Translate("Finish") | html %]"> [% Translate("Finish") | html %] </button>
+        </div>
+    </form>
+</div>
 [% RenderBlockEnd("PublicSurvey") %]
 
 [% RenderBlockStart("PublicSurveyMessage") %]
-    <div id="MainBox" class="TicketCompose ARIARoleMain">
-        <div class="WidgetSimple">
-            <div class="Header">
-                <h2> [% Translate(Data.MessageType) | html %] </h2>
-            </div>
-            <div class="Content">
-                <h4> [% Translate(Data.MessageHeader) | html %] </h4>
-                <p class="SpacingTop">
+<div id="MainBox" class="TicketCompose ARIARoleMain">
+    <div class="WidgetSimple">
+        <div class="Header">
+            <h2> [% Translate(Data.MessageType) | html %] </h2>
+        </div>
+        <div class="Content">
+            <h4> [% Translate(Data.MessageHeader) | html %] </h4>
+            <p class="SpacingTop">
                 [% Translate(Data.Message) | html %]
-                </p>
-                <div class="Clear"></div>
+            </p>
+            <div class="Clear"></div>
 [% RenderBlockStart("ShowAnswersButton") %]
-                <form action="[% Env("CGIHandle") %]" method="post">
-                    <input type="hidden" name="Action" value="[% Env("Action") %]" />
-                    <input type="hidden" name="Subaction" value="ShowVoteData" />
-                    <input type="hidden" name="PublicSurveyKey" value="[% Data.PublicSurveyKey | html %]" />
-                    <button type="submit" >[% Translate("Show my answers") | html %]</button>
-                </form>
+            <form action="[% Env("CGIHandle") %]" method="post">
+                <input type="hidden" name="Action" value="[% Env("Action") %]" />
+                <input type="hidden" name="Subaction" value="ShowVoteData" />
+                <input type="hidden" name="PublicSurveyKey" value="[% Data.PublicSurveyKey | html %]" />
+                <button type="submit" >[% Translate("Show my answers") | html %]</button>
+            </form>
 [% RenderBlockEnd("ShowAnswersButton") %]
-            </div>
         </div>
     </div>
+</div>
 [% RenderBlockEnd("PublicSurveyMessage") %]
 
 [% RenderBlockStart("PublicSurveyVoteData") %]
-    <div class="Content ARIARoleMain" id="MainBox">
-        <div class="Header">
-            <h2>[% Translate("These are your answers") | html %]:</h2>
-        </div>
-        <div class="SurveyBlock">
-            <div class="SurveyBlockHeader">
+<div class="Content ARIARoleMain" id="MainBox">
+    <div class="Header">
+        <h2>[% Translate("These are your answers") | html %]:</h2>
+    </div>
+    <div class="SurveyBlock">
+        <div class="SurveyBlockHeader">
             [% Translate("Survey Title") | html %]
-            </div>
-            <div class="Content">
-                <h2>[% Translate("Survey") | html %]: [% Data.Title | html %]</h2>
-            </div>
         </div>
+        <div class="Content">
+            <h2>[% Translate("Survey") | html %]: [% Data.Title | html %]</h2>
+        </div>
+    </div>
 
-        <div class="SurveyBlock">
-            <div class="SurveyBlockHeader">
+    <div class="SurveyBlock">
+        <div class="SurveyBlockHeader">
             [% Translate("Introduction") | html %]
-            </div>
-            <div class="Content">
-            [% Data.Introduction %]
-            </div>
         </div>
+        <div class="Content">
+            [% Data.Introduction %]
+        </div>
+    </div>
 
-        <div class="Clear"></div>
-        <fieldset class="Survey">
-            <div class="SurveyBlockHeader">
+    <div class="Clear"></div>
+    <fieldset class="Survey">
+        <div class="SurveyBlockHeader">
             [% Translate("These are your answers") | html %]:
-            </div>
+        </div>
 
 [% RenderBlockStart("PublicSurveyVoteQuestion") %]
-            <div class="QuestionContainer">
-                <div class="Question [% Data.Class | html %]"> [% Data.RequiredText | html %][% Data.Question | html %]:</div>
+        <div class="QuestionContainer">
+            <div class="Question [% Data.Class | html %]"> [% Data.RequiredText | html %][% Data.Question | html %]:</div>
 [% RenderBlockStart("PublicSurveyVoteAnswer") %]
-                <div class="Answer">
+            <div class="Answer">
                 [% Data.Answer | html %]
-                </div>
-                <div class="Clear"></div>
-[% RenderBlockEnd("PublicSurveyVoteAnswer") %]
-                <div class="Clear"></div>
             </div>
+            <div class="Clear"></div>
+[% RenderBlockEnd("PublicSurveyVoteAnswer") %]
+            <div class="Clear"></div>
+        </div>
 [% RenderBlockEnd("PublicSurveyVoteQuestion") %]
-        </fieldset>
-    </div>
+    </fieldset>
+</div>
 [% RenderBlockEnd("PublicSurveyVoteData") %]

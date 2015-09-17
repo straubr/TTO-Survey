@@ -6,6 +6,9 @@
 # the enclosed file COPYING for license information (AGPL). If you
 # did not receive this file, see http://www.gnu.org/licenses/agpl.txt.
 # --
+# Last diff from beta 5.3
+# 2015.09.07 - RS -
+#           Migrated to 5.x
 [% RenderBlockStart("SurveyEditQuestions") %]
 <div class="LayoutPopup ARIARoleMain">
     <div class="Header">
@@ -20,7 +23,15 @@
         <div class="Header">
         </div>
 
+        <ul class="BreadCrumb">
+            <li>[% Translate("You are here") | html %]:</li>
+            <li>
+                [% Translate("Survey Questions") | html %]</a>
+            </li>
+        </ul>
+        
 [% RenderBlockStart("SurveyAddQuestion") %]
+
         <div class="WidgetSimple SpacingTop SpacingBottomMedium">
             <div class="Header">
                 <h2>[% Translate("Add Question") | html %]</h2>
@@ -138,7 +149,7 @@
                             <td>
                                 [% Translate(Data.Type) | html %]
                             </td>
-                            <td>
+                            <td class="[% Data.Class | html %]">
                                 [% Translate(Data.Status) | html %]
                             </td>
                             <td>
@@ -170,7 +181,7 @@
                 </table>
 [% RenderBlockEnd("SurveyQuestionsTable") %]
                 <div class="SpacingTop">
-                    <span class="FieldExplanation">[% Translate("When you finish to edit the survey questions just close this window.") | html %]</span>
+                    <span class="FieldExplanation">[% Translate("When you finish to edit the survey questions just close this screen.") | html %]</span>
                 </div>
             </div>
         </div>
@@ -191,7 +202,7 @@ $('.QuestionDelete').bind('click', function (Event) {
 
     </div>
     <div class="Footer">
-        <button type="submit" class="CancelClosePopup Primary CallForAction" value="[% Translate("Close window") | html %]"><span><i class="fa fa-times"></i> [% Translate("Close window") | html %]</span></button>
+        <button type="submit" class="CancelClosePopup Primary CallForAction" value="[% Translate("Close") | html %]"><span><i class="fa fa-times"></i> [% Translate("Close") | html %]</span></button>
     </div>
 </div>
 [% RenderBlockEnd("SurveyEditQuestions") %]
@@ -202,7 +213,7 @@ $('.QuestionDelete').bind('click', function (Event) {
         <h1>[% Translate("Edit Question") | html %]: [% Translate(Data.Question) | html %]</h1>
         <p class="AsteriskExplanation">[% Translate("All fields marked with an asterisk (*) are mandatory.") | html %]</p>
         <p>
-            <a class="CancelClosePopup" href="#">[% Translate("Cancel & close window") | html %]</a>
+            <a class="CancelClosePopup" href="#">[% Translate("Cancel & close") | html %]</a>
             [% Translate("or") | html %]
             <a href="[% Env("Baselink") %]Action=[% Env("Action") %];SurveyID=[% Data.SurveyID | uri %]" >[% Translate("go back to questions") | html %]</a>
         </p>
@@ -211,6 +222,16 @@ $('.QuestionDelete').bind('click', function (Event) {
 
         <div class="Header">
         </div>
+
+        <ul class="BreadCrumb">
+            <li>[% Translate("You are here") | html %]:</li>
+            <li>
+                <a href="[% Env("Baselink") %]Action=[% Env("Action") %];Subaction=AgentSurveyEditQuestions;SurveyID=[% Data.SurveyID | uri %]">[% Translate("Survey Questions") | html %]</a>
+            </li>
+            <li>
+                [% Translate("Question:") | html %] [% Data.Question | html %]
+            </li>
+        </ul>
 
         <div class="WidgetSimple SpacingTop SpacingBottomMedium">
             <div class="Header">
@@ -443,6 +464,7 @@ $('.QuestionDelete').bind('click', function (Event) {
                             </td>
                         </tr>
 [% RenderBlockEnd("QuestionEditYesno") %]
+# TTO Customization
 [% RenderBlockStart("QuestionEditStars") %]
                         <tr>
                             <td>
@@ -520,7 +542,7 @@ $('.AnswerDelete').bind('click', function (Event) {
             <h1>[% Translate("Edit Answer") | html %]: [% Data.Answer | html %] </h1>
             <p class="AsteriskExplanation">[% Translate("All fields marked with an asterisk (*) are mandatory.") | html %]</p>
             <p>
-                <a class="CancelClosePopup" href="#">[% Translate("Cancel & close window") | html %]</a>
+                <a class="CancelClosePopup" href="#">[% Translate("Cancel & close") | html %]</a>
                 [% Translate("or") | html %]
                 <a href="[% Env("Baselink") %]Action=[% Env("Action") %];Subaction=QuestionEdit;QuestionID=[% Data.QuestionID | uri %];SurveyID=[% Data.SurveyID | uri %]">[% Translate("go back to edit question") | html %]</a>
             </p>
@@ -529,6 +551,19 @@ $('.AnswerDelete').bind('click', function (Event) {
 
             <div class="Header">
             </div>
+
+            <ul class="BreadCrumb">
+                <li>[% Translate("You are here") | html %]:</li>
+                <li>
+                    <a href="[% Env("Baselink") %]Action=[% Env("Action") %];Subaction=AgentSurveyEditQuestions;SurveyID=[% Data.SurveyID | uri %]">[% Translate("Survey Questions") | html %]</a>
+                </li>
+                <li>
+                    <a href="[% Env("Baselink") %]Action=[% Env("Action") %];Subaction=QuestionEdit;QuestionID=[% Data.QuestionID | uri %];SurveyID=[% Data.SurveyID | uri %]">[% Translate("Question:") | html %] [% Data.Question | html %]</a>
+                </li>
+                <li>
+                    [% Translate("Answer:") | html %] [% Data.Answer | html %]
+                </li>
+            </ul>
             <div class="WidgetSimple SpacingTop SpacingBottomMedium">
                 <div class="Header">
                     <h2>[% Translate("Edit Answer") | html %]</h2>
@@ -559,6 +594,7 @@ $('.AnswerDelete').bind('click', function (Event) {
     </div>
 </form>
 [% RenderBlockEnd("AnswerEdit") %]
+# TTO Customization
 [% RenderBlockStart("AnswerEditStars") %]
 <form action="[% Env("CGIHandle") %]" method="post" enctype="multipart/form-data" name="AnswerEdit" id="AnswerEdit" class="Validate PreventMultipleSubmits">
 #   Load rating css - steal from FAQ

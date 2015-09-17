@@ -6,6 +6,9 @@
 # the enclosed file COPYING for license information (AGPL). If you
 # did not receive this file, see http://www.gnu.org/licenses/agpl.txt.
 # --
+# Last diff from beta 5.3
+# 2015.09.17 - RS -
+#           Migrated to 5.x
 
 [% RenderBlockStart("SurveyZoom") %]
 <div class="MainBox AriaRoleMain LayoutFixedSidebar SidebarFirst">
@@ -170,6 +173,7 @@
                         </div>
                         <p class="SurveyGraphLeyend">[% Data.AnswerPercent | html %]%</p>
 [% RenderBlockEnd("SurveyEditStatsAnswer") %]
+# TTO Customization
 [% RenderBlockStart("SurveyEditStatsStarsAnswer") %]
 # Load FAQ css
                         <link rel="stylesheet" type="text/css" href="/otrs-web/skins/Agent/tto-slim/css/Survey.Agent.Stars.css">
@@ -188,7 +192,9 @@
 [% RenderBlockEnd("SurveyEditStatsStarsAnswer") %]
                     </fieldset>
 [% RenderBlockEnd("SurveyEditStatsQuestion") %]
+
 [% RenderBlockEnd("SurveyEditStats") %]
+
                 </div>
             </div>
         </div>
