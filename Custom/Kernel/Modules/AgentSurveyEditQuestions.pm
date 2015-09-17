@@ -348,7 +348,7 @@ sub Run {
                 QuestionID => $GetParam{QuestionID},
             );
             foreach (@List) {
-                $Self->{SurveyObject}->AnswerDelete(
+                $SurveyObject->AnswerDelete(
                     QuestionID => $GetParam{QuestionID},
                     AnswerID   => $_->{AnswerID},
                 );
@@ -964,18 +964,18 @@ sub _MaskQuestionEdit {
         );
     }
     # TTO customization:
-    elsif ( $Question{Type} eq 'Stars' ){
+    elsif ( $Question{Type} eq 'Stars' ) {
         my $Type = $Question{Type};
         my @List = $SurveyObject->AnswerList(
             QuestionID => $Param{QuestionID},
         );
         if ( scalar @List ) {
             $LayoutObject->Block(
-                Name => 'QuestionEditTable'
+                Name => 'QuestionEditTable',
                 Data => {},
             );
             if ( $Survey{Status} eq 'New' ) {
-                $Self->{LayoutObject}->Block(
+                $LayoutObject->Block(
                     Name => 'QuestionEditTableDelete',
                     Data => {},
                 );
@@ -1095,11 +1095,24 @@ sub _MaskAnswerEdit {
         QuestionID => $Param{QuestionID},
     );
     $Param{Question} = $Question{Question};
-    # TODO old version did have some stuff here - check please
+
+    # TTO Customization:
+    # For stars I don't want to be able to edit single answers, but rather
+    # answer the "left" and "right". Thus we need a special output block.
+    # (All other questions use the block "AnswerEdit")
+    my $Type = "";
+    if ($Question{Type} eq 'Stars') {
+        $Type = "Stars";
+        my @List = $SurveyObject->AnswerList( QuestionID => $Param{QuestionID} );
+        my @First = split(/::/, $List[0]->{Answer});
+        my @Last = split(/::/, $List[4]->{Answer});
+        $Answer{Left} = $First[0];
+        $Answer{Right} = $Last[1];
+    }
 
     # print the main table.
     $LayoutObject->Block(
-        Name => 'AnswerEdit',
+        Name => 'AnswerEdit' . $Type,
         Data => {
             %Answer,
             %Param,

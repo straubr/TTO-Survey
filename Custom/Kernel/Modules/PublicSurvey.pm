@@ -140,7 +140,7 @@ sub Run {
                 }
                 # TTO Customization, get answers for type stars
                 elsif ( $Question->{Type} eq 'Stars' ) {
-                    my $PublicSurveyVote5 = $Self->{ParamObject}->GetParam(
+                    my $PublicSurveyVote5 = $ParamObject->GetParam(
                         Param => "PublicSurveyVote5[$Question->{QuestionID}]"
                     );
                 if (
@@ -688,7 +688,7 @@ END
             }
             # TTO CUstomization, added Stars Block
             elsif ( $Question->{Type} eq 'Stars' ) {
-                my @AnswerList = $Self->{SurveyObject}->AnswerList(
+                my @AnswerList = $SurveyObject->AnswerList(
                     QuestionID => $Question->{QuestionID},
                 );
                 my $Left = (split(/::/, $AnswerList[0]->{Answer}))[0];

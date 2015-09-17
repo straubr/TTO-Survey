@@ -539,7 +539,7 @@ sub Run {
                 my $Sum = 0;
                 my $CurPercentage = 0;
                 for my $Row (@AnswerList) {
-                    my $VoteCount = $Self->{SurveyObject}->VoteCount(
+                    my $VoteCount = $SurveyObject->VoteCount(
                         QuestionID => $Question->{QuestionID},
                         VoteValue  => $Row->{Answer},
                     );
@@ -552,7 +552,7 @@ sub Run {
                 my $RoundedPercentage = sprintf "%.0f", ($Sum / $Counter);
               
                 # Need stars output block
-                $Self->{LayoutObject}->Block(
+                $LayoutObject->Block(
                     Name => 'SurveyEditStatsStarsAnswer',
                     Data => {
                         Left => $First[0],
@@ -574,7 +574,7 @@ sub Run {
                         $Class = "fa fa-star-o";
                         $Checked = "RateUnChecked";
                     }
-                    $Self->{LayoutObject}->Block(
+                    $LayoutObject->Block(
                     Name => 'StarEntry',
                     Data => {
                         Class => $Class,
