@@ -974,6 +974,13 @@ sub _MaskQuestionEdit {
                 Name => 'QuestionEditTable',
                 Data => {},
             );
+
+            $Self->{LayoutObject}->Block( 
+                Name => 'QuestionEditTable',
+                Data => {
+                    Type => "Stars",
+                },
+            );
             if ( $Survey{Status} eq 'New' ) {
                 $LayoutObject->Block(
                     Name => 'QuestionEditTableDelete',
