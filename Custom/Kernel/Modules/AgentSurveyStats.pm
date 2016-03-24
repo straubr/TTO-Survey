@@ -193,7 +193,7 @@ sub Run {
             }
             # TTO Customization added stars type
             elsif ( $Question->{Type} eq 'Stars' ) {
-                my @List = $Self->{SurveyObject}->VoteGet(
+                my @List = $SurveyObject->VoteGet(
                     RequestID  => $RequestID,
                     QuestionID => $Question->{QuestionID},
                 );

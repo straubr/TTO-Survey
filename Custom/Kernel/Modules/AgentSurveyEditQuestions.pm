@@ -970,12 +970,7 @@ sub _MaskQuestionEdit {
             QuestionID => $Param{QuestionID},
         );
         if ( scalar @List ) {
-            $LayoutObject->Block(
-                Name => 'QuestionEditTable',
-                Data => {},
-            );
-
-            $Self->{LayoutObject}->Block( 
+            $LayoutObject->Block( 
                 Name => 'QuestionEditTable',
                 Data => {
                     Type => "Stars",
